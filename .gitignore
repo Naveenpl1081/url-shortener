@@ -1,0 +1,14 @@
+# node
+node_modules/
+dist/
+
+# sam
+.aws-sam/
+samconfig.toml
+
+# env
+.env
+
+# mac
+.DS_Store
+

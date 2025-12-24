@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: URL Shortener using Lambda, API Gateway, DynamoDB
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 10
+    MemorySize: 128
+
+Resources:
+  UrlTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UrlShortenerNaveenpl
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: shortId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: shortId
+          KeyType: HASH
+
+  CreateShortUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/createShortUrl.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: UrlShortenerNaveenpl
+      Environment:
+        Variables:
+          TABLE_NAME: UrlShortenerNaveenpl
+      Events:
+        CreateShortUrlApi:
+          Type: Api
+          Properties:
+            Path: /get-url-shortner
+            Method: POST
+
+  RedirectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/redirect.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: UrlShortenerNaveenpl
+      Environment:
+        Variables:
+          TABLE_NAME: UrlShortenerNaveenpl
+      Events:
+        RedirectApi:
+          Type: Api
+          Properties:
+            Path: /short/{id}
+            Method: GET
+
+Outputs:
+  ApiBaseUrl:
+    Description: API Gateway base URL for URL Shortener
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+
+  DynamoDBTableName:
+    Description: DynamoDB table name
+    Value: UrlShortenerNaveenpl
